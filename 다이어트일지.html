@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="다이어트일지"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<title>나만의 다이어트 일지</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    background:#0a0a0f;
+    color:#f0ede8;
+    font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    min-height:100vh;
+    padding-bottom:40px;
+    padding-top: env(safe-area-inset-top);
+  }
+  #app{max-width:480px;margin:0 auto;}
+
+  /* HEADER */
+  .header{
+    background:linear-gradient(135deg,#1a1025 0%,#0f1a2e 100%);
+    padding:20px 16px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    position:sticky;top:0;z-index:10;
+    padding-top: calc(env(safe-area-inset-top) + 16px);
+  }
+  .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .header-sub{font-size:10px;letter-spacing:3px;color:#6b7fa3;text-transform:uppercase;margin-bottom:4px;}
+  .header-title{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:#f0ede8;}
+  .streak-badge{
+    background:linear-gradient(135deg,#ff6b35,#f7c59f);
+    border-radius:12px;padding:8px 14px;text-align:center;
+  }
+  .streak-num{font-size:18px;font-weight:800;color:#fff;line-height:1;}
+  .streak-label{font-size:9px;color:rgba(255,255,255,0.85);letter-spacing:1px;}
+
+  /* DAYS */
+  .days-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+  .days-scroll::-webkit-scrollbar{display:none;}
+  .day-btn{
+    flex:0 0 auto;width:48px;height:62px;border-radius:14px;
+    border:2px solid rgba(255,255,255,0.07);
+    background:rgba(255,255,255,0.04);
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    transition:all 0.2s;position:relative;
+    -webkit-appearance:none;
+  }
+  .day-btn.selected{border-color:#7c6dff;background:rgba(124,109,255,0.2);}
+  .day-name{font-size:9px;color:#6b7fa3;letter-spacing:1px;}
+  .day-btn.selected .day-name{color:#a89fff;}
+  .day-num{font-size:13px;font-weight:500;color:#8b9ab5;}
+  .day-btn.selected .day-num{font-weight:700;color:#f0ede8;}
+  .day-dots{display:flex;gap:1.5px;}
+  .dot{width:3px;height:3px;border-radius:2px;background:rgba(255,255,255,0.1);}
+  .dot.done{background:#4ecdc4;}
+  .dot.full{background:#7c6dff;}
+  .today-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#ff6b35;border:2px solid #0a0a0f;}
+
+  /* MAIN */
+  .main{padding:18px 14px;}
+
+  /* PROGRESS CARD */
+  .progress-card{
+    background:linear-gradient(135deg,rgba(124,109,255,0.12),rgba(78,205,196,0.08));
+    border:1px solid rgba(124,109,255,0.2);
+    border-radius:20px;padding:16px 18px;margin-bottom:18px;
+  }
+  .progress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .progress-date{font-size:14px;font-weight:700;color:#f0ede8;}
+  .today-badge{font-size:10px;background:#ff6b35;color:#fff;padding:2px 8px;border-radius:8px;margin-left:8px;}
+  .motivation{font-size:11px;color:#6b7fa3;margin-top:3px;}
+  .circle-wrap{position:relative;width:54px;height:54px;flex-shrink:0;}
+  .circle-wrap svg{transform:rotate(-90deg);}
+  .pct-text{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-size:11px;font-weight:800;color:#f0ede8;
+  }
+  .prog-bar-bg{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+  .prog-bar{height:100%;border-radius:3px;transition:width 0.4s ease;background:linear-gradient(90deg,#4ecdc4,#7c6dff);}
+  .prog-bar.full{background:linear-gradient(90deg,#7c6dff,#ff6b35);}
+  .prog-count{font-size:11px;color:#6b7fa3;margin-top:5px;text-align:right;}
+
+  /* SECTION */
+  .section{margin-bottom:14px;}
+  .section-title{font-size:11px;letter-spacing:2px;font-weight:700;margin-bottom:10px;padding-left:2px;}
+  .items{display:flex;flex-direction:column;gap:8px;}
+
+  /* CHECK ITEM */
+  .check-item{
+    width:100%;background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:16px;padding:13px 14px;
+    cursor:pointer;display:flex;align-items:center;gap:12px;
+    transition:all 0.25s ease;-webkit-appearance:none;
+    text-align:left;
+  }
+  .check-item.checked{
+    background:linear-gradient(135deg,rgba(124,109,255,0.15),rgba(78,205,196,0.1));
+    border-color:rgba(124,109,255,0.4);
+  }
+  .check-item:active{transform:scale(0.97);}
+  .checkbox{
+    width:26px;height:26px;border-radius:8px;flex-shrink:0;
+    background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.15);
+    display:flex;align-items:center;justify-content:center;
+    transition:all 0.25s;
+  }
+  .check-item.checked .checkbox{
+    background:linear-gradient(135deg,#7c6dff,#4ecdc4);border:none;
+    box-shadow:0 0 12px rgba(124,109,255,0.4);
+  }
+  .check-icon{font-size:19px;flex-shrink:0;}
+  .check-texts{flex:1;}
+  .check-label{font-size:13px;font-weight:600;color:#8b9ab5;transition:color 0.2s;}
+  .check-item.checked .check-label{color:#f0ede8;}
+  .check-sub{font-size:10px;color:#4b5a73;margin-top:1px;}
+  .check-star{font-size:15px;}
+
+  /* MEMO */
+  .memo-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;padding:14px 16px;margin-bottom:14px;
+  }
+  .memo-label{font-size:11px;color:#6b7fa3;margin-bottom:8px;letter-spacing:1px;}
+  textarea{
+    width:100%;background:transparent;border:none;outline:none;
+    color:#f0ede8;font-size:13px;line-height:1.6;resize:none;
+    min-height:70px;font-family:inherit;
+  }
+  textarea::placeholder{color:#3b4a63;}
+
+  /* WEEKLY */
+  .weekly-card{
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:20px;padding:14px 16px;
+  }
+  .weekly-label{font-size:11px;color:#6b7fa3;margin-bottom:12px;letter-spacing:1px;}
+  .weekly-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .weekly-item{text-align:center;}
+  .weekly-val{font-size:19px;font-weight:800;line-height:1.1;}
+  .weekly-unit{font-size:10px;font-weight:400;color:#6b7fa3;}
+  .weekly-name{font-size:10px;color:#6b7fa3;margin-top:3px;}
+
+  /* CHECKMARK SVG */
+  .chk-svg{display:none;}
+  .check-item.checked .chk-svg{display:block;}
+  .chk-circle{display:block;}
+  .check-item.checked .chk-circle{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-sub">나만의</div>
+        <div class="header-title">다이어트 일지 📔</div>
+      </div>
+      <div class="streak-badge">
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-label">연속 🔥</div>
+      </div>
+    </div>
+    <div class="days-scroll" id="daysScroll"></div>
+  </div>
+
+  <div class="main">
+    <div class="progress-card">
+      <div class="progress-top">
+        <div>
+          <div class="progress-date" id="progressDate"></div>
+          <div class="motivation" id="motivation"></div>
+        </div>
+        <div class="circle-wrap">
+          <svg width="54" height="54">
+            <circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+            <circle id="circleArc" cx="27" cy="27" r="22" fill="none"
+              stroke="#4ecdc4" stroke-width="4"
+              stroke-dasharray="138.2"
+              stroke-dashoffset="138.2"
+              stroke-linecap="round"
+              style="transition:stroke-dashoffset 0.5s ease;"/>
+          </svg>
+          <div class="pct-text" id="pctText">0%</div>
+        </div>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+      <div class="prog-count" id="progCount">0 / 7 완료</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" style="color:#ff6b35;">🍽️ 식단</div>
+      <div class="items" id="dietItems"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" style="color:#4ecdc4;">🏃 운동</div>
+      <div class="items" id="exerciseItems"></div>
+    </div>
+
+    <div class="memo-card">
+      <div class="memo-label">✏️ 오늘의 메모</div>
+      <textarea id="noteArea" placeholder="오늘 컨디션, 식단 메모, 각오 등을 적어보세요..."></textarea>
+    </div>
+
+    <div class="weekly-card">
+      <div class="weekly-label">📊 이번 주 현황</div>
+      <div class="weekly-grid" id="weeklyGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PREFIX = "diet_journal_";
+const FIELDS = ["shake1","shake2","meal","supplement","steps","belly","squat"];
+const DAYS_KO = ["일","월","화","수","목","금","토"];
+
+const ITEMS = [
+  {key:"shake1",icon:"🥛",label:"단백질 쉐이크 1",sub:"아침",cat:"diet"},
+  {key:"shake2",icon:"🥛",label:"단백질 쉐이크 2",sub:"저녁",cat:"diet"},
+  {key:"meal",icon:"🍱",label:"일반식 1끼",sub:"균형 잡힌 식사",cat:"diet"},
+  {key:"supplement",icon:"💊",label:"영양제",sub:"오늘의 영양제",cat:"diet"},
+  {key:"steps",icon:"👟",label:"만보 걷기",sub:"10,000 steps",cat:"exercise"},
+  {key:"belly",icon:"🔥",label:"뱃살 운동",sub:"100회",cat:"exercise"},
+  {key:"squat",icon:"💪",label:"스쿼트",sub:"30회",cat:"exercise"},
+];
+
+function dateStr(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function todayStr(){ return dateStr(new Date()); }
+
+function loadData(ds){
+  try{ return JSON.parse(localStorage.getItem(PREFIX+ds))||{}; }catch(e){ return {}; }
+}
+function saveData(ds,data){
+  localStorage.setItem(PREFIX+ds, JSON.stringify(data));
+}
+function getCompletion(ds){
+  const d=loadData(ds);
+  return FIELDS.filter(f=>d[f]).length;
+}
+
+let selectedDate = todayStr();
+
+function getLast7(){
+  const arr=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    arr.push({ds:dateStr(d),dayKo:DAYS_KO[d.getDay()],num:String(d.getDate()).padStart(2,'0'),isToday:i===0});
+  }
+  return arr;
+}
+
+function calcStreak(){
+  let s=0, d=new Date();
+  while(true){
+    const ds=dateStr(d);
+    if(getCompletion(ds)<7) break;
+    s++; d.setDate(d.getDate()-1);
+  }
+  return s;
+}
+
+function getMotivation(pct){
+  if(pct===100) return "완벽한 하루! 🏆 대단해요!";
+  if(pct>=70) return "거의 다 왔어요! 조금만 더! 💪";
+  if(pct>=40) return "잘 하고 있어요! 계속 화이팅! 🔥";
+  return "오늘도 할 수 있어요! 시작해봐요! ✨";
+}
+
+function renderDays(){
+  const days=getLast7();
+  const wrap=document.getElementById('daysScroll');
+  wrap.innerHTML='';
+  days.forEach(day=>{
+    const comp=getCompletion(day.ds);
+    const sel=day.ds===selectedDate;
+    const btn=document.createElement('button');
+    btn.className='day-btn'+(sel?' selected':'');
+    btn.innerHTML=`
+      <span class="day-name">${day.dayKo}</span>
+      <span class="day-num">${day.num}</span>
+      <div class="day-dots">${FIELDS.map((_,i)=>`<div class="dot${i<comp?(comp===7?' full':' done'):''}"></div>`).join('')}</div>
+      ${day.isToday?'<div class="today-dot"></div>':''}
+    `;
+    btn.addEventListener('click',()=>{ selectedDate=day.ds; render(); });
+    wrap.appendChild(btn);
+  });
+}
+
+function renderProgress(){
+  const data=loadData(selectedDate);
+  const count=FIELDS.filter(f=>data[f]).length;
+  const pct=Math.round(count/7*100);
+  const circ=2*Math.PI*22;
+
+  const isToday=selectedDate===todayStr();
+  document.getElementById('progressDate').innerHTML=
+    selectedDate+(isToday?'<span class="today-badge">오늘</span>':'');
+  document.getElementById('motivation').textContent=getMotivation(pct);
+  document.getElementById('pctText').textContent=pct+'%';
+  document.getElementById('progCount').textContent=count+' / 7 완료';
+
+  const arc=document.getElementById('circleArc');
+  arc.setAttribute('stroke-dashoffset', circ*(1-pct/100));
+  arc.setAttribute('stroke', pct===100?'#7c6dff':'#4ecdc4');
+
+  const bar=document.getElementById('progBar');
+  bar.style.width=pct+'%';
+  bar.className='prog-bar'+(pct===100?' full':'');
+
+  document.getElementById('streakNum').textContent=calcStreak();
+}
+
+function renderItems(){
+  const data=loadData(selectedDate);
+  ['diet','exercise'].forEach(cat=>{
+    const wrap=document.getElementById(cat+'Items');
+    wrap.innerHTML='';
+    ITEMS.filter(i=>i.cat===cat).forEach(item=>{
+      const checked=!!data[item.key];
+      const btn=document.createElement('button');
+      btn.className='check-item'+(checked?' checked':'');
+      btn.innerHTML=`
+        <div class="checkbox">
+          <svg class="chk-svg" width="13" height="10" viewBox="0 0 13 10" fill="none">
+            <path d="M1.5 5L5 8.5L11.5 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="check-icon">${item.icon}</div>
+        <div class="check-texts">
+          <div class="check-label">${item.label}</div>
+          <div class="check-sub">${item.sub}</div>
+        </div>
+        ${checked?'<div class="check-star">✨</div>':''}
+      `;
+      btn.addEventListener('click',()=>{
+        const d=loadData(selectedDate);
+        d[item.key]=!d[item.key];
+        saveData(selectedDate,d);
+        render();
+      });
+      wrap.appendChild(btn);
+    });
+  });
+}
+
+function renderNote(){
+  const data=loadData(selectedDate);
+  const ta=document.getElementById('noteArea');
+  ta.value=data.note||'';
+  ta.oninput=()=>{
+    const d=loadData(selectedDate);
+    d.note=ta.value;
+    saveData(selectedDate,d);
+  };
+}
+
+function renderWeekly(){
+  const days=getLast7();
+  const perfectDays=days.filter(d=>getCompletion(d.ds)===7).length;
+  const totalChecks=days.reduce((a,d)=>a+getCompletion(d.ds),0);
+  const rate=Math.round(totalChecks/(7*7)*100);
+  const streak=calcStreak();
+
+  const stats=[
+    {label:"완벽한 날",value:perfectDays,unit:"일",color:"#7c6dff"},
+    {label:"체크 합계",value:totalChecks,unit:"개",color:"#4ecdc4"},
+    {label:"달성률",value:rate,unit:"%",color:"#ff6b35"},
+    {label:"연속일",value:streak,unit:"일",color:"#f7c59f"},
+  ];
+  const grid=document.getElementById('weeklyGrid');
+  grid.innerHTML=stats.map(s=>`
+    <div class="weekly-item">
+      <div class="weekly-val" style="color:${s.color}">${s.value}<span class="weekly-unit">${s.unit}</span></div>
+      <div class="weekly-name">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function render(){
+  renderDays();
+  renderProgress();
+  renderItems();
+  renderNote();
+  renderWeekly();
+}
+
+render();
+</script>
+</body>
+</html>
